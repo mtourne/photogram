@@ -1,0 +1,26 @@
+cmake_minimum_required (VERSION 2.8)
+project (photogram)
+
+include (FindPkgConfig)
+
+# Find universal dependencies (from PCL)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/" ${CMAKE_MODULE_PATH})
+
+# add sources
+add_executable(photogram photogram.cc easyexif/exif.cpp)
+
+# find and add OpenCV
+find_package(OpenCV REQUIRED)
+target_link_libraries(photogram ${OpenCV_LIBS})
+
+# include SiftGPU
+add_subdirectory(SiftGPU)
+message("siftgpu libs: ${LIBS_SIFTGPU}")
+
+
+# find and add eigen lib
+find_package(Eigen REQUIRED)
+include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+
+# include rapidjson lib
+include_directories(rapidjson/include)

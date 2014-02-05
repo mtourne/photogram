@@ -1,0 +1,3 @@
+[submodule "SiftGPU"]
+	path = SiftGPU
+	url = https://github.com/pitzer/SiftGPU

@@ -1,26 +1,19 @@
+/* Copyright 2014 Matthieu Tourne */
+
 #include <iostream>
 #include <stdio.h>
-#include <vector>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-// non-free sift detector
-#include <opencv2/nonfree/features2d.hpp>
+#include "photogram.h"
 
-#include <Eigen/Dense>
-#include <math.h>
+_INITIALIZE_EASYLOGGINGPP
 
+
+#include "features2d.h"
 #include "easyexif/exif.h"
 
-
-using namespace std;
-using namespace cv;
-
-#define DEBUG 1
+#define VISUAL_DEBUG 1
 
 typedef Eigen::Matrix<double, 3, 3> IntrinsicMat;
-typedef vector<KeyPoint> Keypoints;
 
 void help(void) {
     cout << "Usage: photogram [image list]" << endl;
@@ -97,7 +90,7 @@ int get_k_matrix_from_exif(const char *filename, Mat& img, IntrinsicMat &K) {
         return rc;
     }
 
-#ifdef DEBUG
+#ifndef NDEBUG
     print_exif_data(exif_data);
 #endif
 
@@ -130,33 +123,9 @@ int get_k_matrix_from_exif(const char *filename, Mat& img, IntrinsicMat &K) {
     K(0,2) = img.cols / 2;
     K(1,2) = img.rows / 2;
 
-#ifdef DEBUG
-    cout << "K intrinsic matrix: " << endl << K << endl;
-#endif
+    LOG(DEBUG) << "K intrinsic matrix: " << endl << K << endl;
 
     return 0;
-}
-
-int get_features(Mat& img_gray, Keypoints &keypoints, Mat &descriptors) {
-    // TODO (mtourne): only need to instantiate detector / descriptor once
-
-    // SIFT feature detector and feature extractor
-    SiftFeatureDetector detector;
-    SiftDescriptorExtractor extractor;
-
-    // for surf, use this
-    // SurfFeatureDetector detector;
-    // SurfDescriptorExtractor extractor;
-
-    detector.detect(img_gray, keypoints);
-    extractor.compute(img_gray, keypoints, descriptors);
-
-#if DEBUG
-    cout << "keypoints: " << keypoints.size() << endl;
-#endif
-
-    return 0;
-
 }
 
 int main(int argc, char **argv) {
@@ -167,22 +136,68 @@ int main(int argc, char **argv) {
     }
 
     Mat img;
-    Mat img_gray;
     IntrinsicMat K;
+
+    vector<ImageFeatures*> feature_list;
+    vector<Mat*> images;
 
     for (int i = 1; i < argc; i++) {
         img = imread(argv[i]);
-        cvtColor(img, img_gray, COLOR_BGR2GRAY);
+
+        Mat *img_gray = new Mat();
+
+        cvtColor(img, *img_gray, COLOR_BGR2GRAY);
 
         // get instrinsic camera matrix K
         get_k_matrix_from_exif(argv[i], img, K);
 
-        // compute SIFT features
-        Mat descriptors;
-        Keypoints keypoints;
-        get_features(img_gray, keypoints, descriptors);
+        ImageFeatures *features = new ImageFeatures();
+        features->img_gray = img_gray;
+        features->filename = argv[i];
 
+        // compute SIFT descriptors
+        get_features(*img_gray, *features);
+
+        feature_list.push_back(features);
+     }
+
+    LOG(DEBUG) << "feature_list size: " << feature_list.size();
+
+    // XX (mtourne): compare all the images with each other for now
+    vector<ImageFeatures*>::iterator it1;
+    vector<ImageFeatures*>::iterator it2;
+
+    for (it1 = feature_list.begin();
+         it1 != feature_list.end();
+         ++it1) {
+
+        for (it2 = it1 + 1;
+             it2 != feature_list.end();
+             ++it2) {
+
+            ImageFeatures *features1 = *it1;
+            ImageFeatures *features2 = *it2;
+
+            Matches matches;
+
+            // match image descriptors
+            match_features(*features1, *features2, matches);
+
+            vector<char> keypointMask;
+            Mat F;
+
+            // Find F matrix by RANSAC on the matches
+            get_F_matrix(*features1, *features2, matches, F, keypointMask);
+
+#if VISUAL_DEBUG
+            write_matches_image(*features1, *features2, matches, keypointMask);
+#endif
+
+        }
     }
+
+    Mat img_matches;
+
 
     return 0;
 }

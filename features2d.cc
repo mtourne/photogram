@@ -106,6 +106,23 @@ void get_good_matches(Matches &matches, Matches &good_matches) {
 
 }
 
+void matches2points(const Matches& matches,
+                    ImageFeatures& features1, ImageFeatures& features2,
+                    vector<Point2f>& pts1, vector<Point2f>& pts2) {
+    pts1.clear();
+    pts2.clear();
+    pts1.reserve(matches.size());
+    pts2.reserve(matches.size());
+
+    for (size_t i = 0; i < matches.size(); i++) {
+        const DMatch& match = matches[i];
+        pts1.push_back(features1.keypoints[match.queryIdx].pt);
+        pts2.push_back(features2.keypoints[match.trainIdx].pt);
+    }
+
+    LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
+}
+
 // use RANSAC to get F matrix
 // return better_matches for all the matches that make sense
 int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
@@ -113,12 +130,7 @@ int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
     vector<Point2f> pts1, pts2;
     vector<unsigned char> status;
 
-    for(unsigned int i = 0; i < matches.size(); i++) {
-        pts1.push_back(features1.keypoints[matches[i].queryIdx].pt);
-        pts2.push_back(features2.keypoints[matches[i].trainIdx].pt);
-    }
-
-    LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
+    matches2points(matches, features1, features2, pts1, pts2);
 
     F = findFundamentalMat(pts1, pts2, FM_RANSAC, 1, 0.99, status);
 
@@ -135,33 +147,24 @@ int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
 
 void write_matches_image(ImageFeatures &features1,
                          ImageFeatures &features2, Matches &matches,
-                         const vector<char> &keypointMask = vector<char>()) {
+                         const string file_tag,
+                         const vector<char> &keypointMask) {
     Mat img_matches;
     ostringstream ss;
 
     Matches good_matches;
 
-    // get_good_matches(matches, good_matches);
-
     // TODO (mtourne): implement as set_filename() for Features2D class
     ss << "matches_" << remove_extension(basename(features1.filename)) << "_"
        << remove_extension(basename(features2.filename)) << "_"
-       << features1.method << ".jpg";
+       << features1.method;
 
-    // sanity
-    for( size_t m = 0; m < matches.size(); m++ ) {
-        int i1 = matches[m].queryIdx;
-        int i2 = matches[m].trainIdx;
-        if (i1 >= features1.keypoints.size()) {
-
-            cout << "i1: " << i1 << endl;
-            cout << "matches / keypoints1 issue, size: " << features1.keypoints.size() << endl;
-        }
-        if (i2 >= features2.keypoints.size()) {
-            cout << "id2: " << i2 << endl;
-            cout << "matches / keypoints2 issue, size: " << features2.keypoints.size() << endl;
-        }
+    if (file_tag.size() > 0) {
+        ss << "_" << file_tag;
     }
+
+    ss << ".jpg";
+
 
     drawMatches(*features1.img_gray, features1.keypoints,
                 *features2.img_gray, features2.keypoints,

@@ -39,8 +39,12 @@ int match_features(ImageFeatures &features1,
                    ImageFeatures &features2, Matches& match);
 int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
                  Matches &matches, Mat &F, vector<char> &keypointMask);
-void write_matches_image(ImageFeatures &features1, ImageFeatures &features2,
-                         Matches &matches, const vector<char> &keypointMask);
-
+void matches2points(const Matches& matches,
+                    ImageFeatures& features1, ImageFeatures& features2,
+                    vector<Point2f>& pts1, vector<Point2f>& pts2);
+void write_matches_image(ImageFeatures &features1,
+                         ImageFeatures &features2, Matches &matches,
+                         const string file_tag = "",
+                         const vector<char> &keypointMask = vector<char>());
 
 #endif // !FEATURES2D_H

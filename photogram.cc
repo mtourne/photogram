@@ -7,7 +7,6 @@
 
 _INITIALIZE_EASYLOGGINGPP
 
-
 #include "features2d.h"
 #include "easyexif/exif.h"
 
@@ -135,24 +134,24 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    Mat img;
     IntrinsicMat K;
 
     vector<ImageFeatures*> feature_list;
     vector<Mat*> images;
 
     for (int i = 1; i < argc; i++) {
-        img = imread(argv[i]);
-
+        Mat *img = new Mat();
         Mat *img_gray = new Mat();
 
-        cvtColor(img, *img_gray, COLOR_BGR2GRAY);
+        *img = imread(argv[i]);
+        cvtColor(*img, *img_gray, COLOR_BGR2GRAY);
 
         // get instrinsic camera matrix K
-        get_k_matrix_from_exif(argv[i], img, K);
+        get_k_matrix_from_exif(argv[i], *img, K);
 
         ImageFeatures *features = new ImageFeatures();
         features->img_gray = img_gray;
+        features->img = img;
         features->filename = argv[i];
 
         // compute SIFT descriptors
@@ -186,11 +185,15 @@ int main(int argc, char **argv) {
             vector<char> keypointMask;
             Mat F;
 
+#ifdef VISUAL_DEBUG
+            write_matches_image(*features1, *features2, matches);
+#endif
+
             // Find F matrix by RANSAC on the matches
             get_F_matrix(*features1, *features2, matches, F, keypointMask);
 
-#if VISUAL_DEBUG
-            write_matches_image(*features1, *features2, matches, keypointMask);
+#ifdef VISUAL_DEBUG
+            write_matches_image(*features1, *features2, matches, "RANSAC", keypointMask);
 #endif
 
         }

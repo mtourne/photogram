@@ -123,30 +123,8 @@ void matches2points(const Matches& matches,
     LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
 }
 
-// use RANSAC to get F matrix
-// return better_matches for all the matches that make sense
-int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
-                 Matches &matches, Mat &F, vector<char> &keypointMask) {
-    vector<Point2f> pts1, pts2;
-    vector<unsigned char> status;
-
-    matches2points(matches, features1, features2, pts1, pts2);
-
-    F = findFundamentalMat(pts1, pts2, FM_RANSAC, 1, 0.99, status);
-
-    // XX (mtourne): stupid vector<unsigned char> to vector<char> conversion
-    keypointMask = vector<char> (status.begin(), status.end());
-
-    LOG(DEBUG) << "F matrix: " << endl << F;
-
-    LOG(DEBUG) << "Fundamental mat is keeping " << countNonZero(keypointMask) << " / "
-               << keypointMask.size();
-
-    return 0;
-}
-
-void write_matches_image(ImageFeatures &features1,
-                         ImageFeatures &features2, Matches &matches,
+void write_matches_image(const ImageFeatures &features1, const ImageFeatures &features2,
+                         const Matches &matches,
                          const string file_tag,
                          const vector<char> &keypointMask) {
     Mat img_matches;

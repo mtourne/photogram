@@ -8,11 +8,10 @@
 _INITIALIZE_EASYLOGGINGPP
 
 #include "features2d.h"
+#include "image_pairs.h"
 #include "easyexif/exif.h"
 
 #define VISUAL_DEBUG 1
-
-typedef Eigen::Matrix<double, 3, 3> IntrinsicMat;
 
 void help(void) {
     cout << "Usage: photogram [image list]" << endl;
@@ -80,7 +79,7 @@ int get_camera_sensor_size(const string camera_model,
 }
 
 // get the intrinsic matrix of the camera
-int get_k_matrix_from_exif(const char *filename, Mat& img, IntrinsicMat &K) {
+int get_k_matrix_from_exif(const char *filename, Mat& img, Mat33 &K) {
     EXIFInfo exif_data;
     int rc;
 
@@ -114,7 +113,7 @@ int get_k_matrix_from_exif(const char *filename, Mat& img, IntrinsicMat &K) {
     double f_x = img.cols / (2 * tan_half_x_fov);
     double f_y = img.rows / (2 * tan_half_y_fov);
 
-    K = IntrinsicMat::Identity();
+    K = Mat33::Identity();
     K(0,0) = f_x;
     K(1,1) = f_y;
 
@@ -134,14 +133,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    IntrinsicMat K;
+    Mat33 K;
 
-    vector<ImageFeatures*> feature_list;
-    vector<Mat*> images;
+    vector<ImageFeaturesPtr> feature_list;
 
     for (int i = 1; i < argc; i++) {
-        Mat *img = new Mat();
-        Mat *img_gray = new Mat();
+        MatPtr img(new Mat());
+        MatPtr img_gray(new Mat());
 
         *img = imread(argv[i]);
         cvtColor(*img, *img_gray, COLOR_BGR2GRAY);
@@ -149,7 +147,7 @@ int main(int argc, char **argv) {
         // get instrinsic camera matrix K
         get_k_matrix_from_exif(argv[i], *img, K);
 
-        ImageFeatures *features = new ImageFeatures();
+        ImageFeaturesPtr features(new ImageFeatures());
         features->img_gray = img_gray;
         features->img = img;
         features->filename = argv[i];
@@ -163,8 +161,8 @@ int main(int argc, char **argv) {
     LOG(DEBUG) << "feature_list size: " << feature_list.size();
 
     // XX (mtourne): compare all the images with each other for now
-    vector<ImageFeatures*>::iterator it1;
-    vector<ImageFeatures*>::iterator it2;
+    vector<ImageFeaturesPtr>::iterator it1;
+    vector<ImageFeaturesPtr>::iterator it2;
 
     for (it1 = feature_list.begin();
          it1 != feature_list.end();
@@ -174,33 +172,28 @@ int main(int argc, char **argv) {
              it2 != feature_list.end();
              ++it2) {
 
-            ImageFeatures *features1 = *it1;
-            ImageFeatures *features2 = *it2;
+            int rc = 0;
+            // XX: for now only one intrinsic matrix
+            ImagePair image_pair(*it1, *it2, K);
 
-            Matches matches;
+            // compute matches in a pair
+            rc = image_pair.compute_matches();
+            if (rc != 0) {
+                continue;
+            }
 
-            // match image descriptors
-            match_features(*features1, *features2, matches);
+            // compute F matrix from matches with 8 point RANSAC
+            rc = image_pair.compute_F_mat();
+            if (rc != 0) {
+                continue;
+            }
 
-            vector<char> keypointMask;
-            Mat F;
-
-#ifdef VISUAL_DEBUG
-            write_matches_image(*features1, *features2, matches);
-#endif
-
-            // Find F matrix by RANSAC on the matches
-            get_F_matrix(*features1, *features2, matches, F, keypointMask);
-
-#ifdef VISUAL_DEBUG
-            write_matches_image(*features1, *features2, matches, "RANSAC", keypointMask);
+#if VISUAL_DEBUG
+            image_pair.print_matches();
 #endif
 
         }
     }
-
-    Mat img_matches;
-
 
     return 0;
 }

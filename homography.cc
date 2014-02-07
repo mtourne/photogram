@@ -19,17 +19,21 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    vector<ImageFeatures*> feature_list;
-    vector<Mat*> images;
+    vector<ImageFeaturesPtr> feature_list;
 
     for (int i = 1; i < argc; i++) {
-        Mat *img = new Mat();
-        Mat *img_gray = new Mat();
+        MatPtr img(new Mat());
+        MatPtr img_gray(new Mat());
 
         *img = imread(argv[i]);
+        if (!img) {
+            LOG(FATAL) << "Unable to load image: " << argv[i];
+            return 1;
+        }
+
         cvtColor(*img, *img_gray, COLOR_BGR2GRAY);
 
-        ImageFeatures *features = new ImageFeatures();
+        ImageFeaturesPtr features(new ImageFeatures());
         features->img_gray = img_gray;
         features->img = img;
         features->filename = argv[i];
@@ -40,8 +44,8 @@ int main(int argc, char** argv) {
         feature_list.push_back(features);
      }
 
-    ImageFeatures *features1 = feature_list[0];
-    ImageFeatures *features2 = feature_list[1];
+    ImageFeaturesPtr features1 = feature_list[0];
+    ImageFeaturesPtr features2 = feature_list[1];
 
     Matches matches;
     vector<Point2f> pts1, pts2;
@@ -52,15 +56,59 @@ int main(int argc, char** argv) {
 
     matches2points(matches, *features1, *features2, pts1, pts2);
 
-    H = findHomography(pts1, pts2, CV_RANSAC);
+    vector<unsigned char> status;
+    vector<char> keypointMask;
+    H = findHomography(pts1, pts2, CV_RANSAC, 3, status);
 
     LOG(DEBUG) << "Homography matrix H: " << endl << H;
 
-    Mat warped;
-    // warp the perspective to fit onto img1
-    warpPerspective(*features1->img, warped, H, features2->img->size());
+    // print out RANSAC'ed matched keypoints
+    keypointMask = vector<char> (status.begin(), status.end());
 
-    imwrite("img1_img2_warped.jpg", warped);
+#ifdef VISUAL_DEBUG
+    write_matches_image(*features1, *features2, matches, "RANSAC",
+                        keypointMask);
+#endif
+
+#if 1
+    // scale factor
+    double scale_x = (double) features1->img->rows /
+        (double) features2->img->rows;
+
+    double scale_y = (double) features1->img->cols /
+        (double) features2->img->cols;
+
+
+    // double scale_x = (double) 3;
+    // double scale_y = (double) 3;
+
+    LOG(DEBUG) << "img1 rows: " << features1->img->rows
+               << ", img2 rows: " << features2->img->rows << endl
+               << "img1 cols: " << features1->img->cols
+               << ", img2 cols: " << features2->img->cols << endl
+               << "1 / scale factor x: " << scale_x
+               << ", 1 / scale factor y: " << scale_y;
+
+    Mat Scale = Mat::eye(3, 3, H.type());
+    Scale.at<double>(0,0) = scale_x;
+    Scale.at<double>(1,1) = scale_y;
+
+    LOG(DEBUG) << "Scale matrix : " << endl << Scale;
+
+    H = H * Scale;
+
+
+    LOG(DEBUG) << "Scaled Homography matrix H: " << endl << H;
+
+    LOG(DEBUG) << "Output image size: " << features1->img->size()
+               << ", type: " << features1->img->type();
+#endif
+
+    // warp to register onto image1
+    Mat warped;
+    warpPerspective(*features1->img, warped, H, features1->img->size());
+
+    imwrite("img1_img2_warped.tif", warped);
 
     return 0;
 }

@@ -91,6 +91,7 @@ add_executable(photogram
 	photogram.cc
 	features2d.cc
 	image_pairs.cc
+	bundle.cc
 	easyexif/exif.cpp
 	sift_gpu_wrapper.cpp
 )
@@ -102,3 +103,8 @@ add_executable(homography
 	sift_gpu_wrapper.cpp
 )
 target_link_libraries(homography ${LINKER_LIBS})
+
+add_executable(test_haversine_flann
+	test_haversine_flann.cc
+)
+target_link_libraries(test_haversine_flann ${LINKER_LIBS})

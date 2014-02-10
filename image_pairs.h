@@ -3,22 +3,26 @@
 
 #include "photogram.h"
 #include "features2d.h"
+#include "image.h"
 
-#define MIN_FEATURE_MATCHES 8
-#define MIN_INLIERS 8
+#define MIN_FEATURE_MATCHES 50
+#define MIN_INLIERS 50
 
 // Image pair is a pair of images from the same camera at different point in the space
 class ImagePair {
  public:
-    ImagePair(ImageFeaturesPtr features1, ImageFeaturesPtr features2, Mat33 K)
-        : features1(features1), features2(features2), K(K), error("")
+    ImagePair(Image::ptr image1, Image::ptr image2)
+        : image1(image1), image2(image2), error("")
     {};
     ~ImagePair() {};
 
-    int compute_matches();
+    bool compute_matches();
 
     // compute fundamental matrix
-    int compute_F_mat();
+    bool compute_F_mat();
+
+    // compute camera matrix P
+    int compute_camera_mat();
 
     void print_matches() const;
 
@@ -26,13 +30,11 @@ class ImagePair {
 
  private:
 
-    ImageFeaturesPtr    features1;
-    ImageFeaturesPtr    features2;
+    Image::ptr          image1;
+    Image::ptr          image2;
 
     Matches             matches;
 
-    // an image pair need to have the same intrinsinc cam
-    Mat33               K;
     Mat                 F;
 
     // vector of inliers associated to matches
@@ -43,4 +45,4 @@ class ImagePair {
     string error;
 };
 
-#endif
+#endif // !IMAGE

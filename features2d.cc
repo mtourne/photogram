@@ -10,6 +10,7 @@
 
 #include "photogram.h"
 #include "features2d.h"
+#include "util.h"
 
 #ifdef USE_SIFT_GPU
 #include "sift_gpu_wrapper.h"
@@ -71,17 +72,7 @@ int match_features(ImageFeatures &features1,
     return 0;
 }
 
-std::string basename(const std::string& pathname) {
-    return {std::find_if(pathname.rbegin(), pathname.rend(),
-                         [](char c) { return c == '/'; }).base(),
-            pathname.end()};
-}
 
-std::string remove_extension(const std::string& pathname) {
-    string s = pathname;
-    s.erase(s.find_last_of("."), string::npos);
-    return s;
-}
 
 // very simple way to get good matches
 void get_good_matches(Matches &matches, Matches &good_matches) {
@@ -102,8 +93,6 @@ void get_good_matches(Matches &matches, Matches &good_matches) {
     }
 
     LOG(DEBUG) << "Good Matches : " << good_matches.size();
-
-
 }
 
 void matches2points(const Matches& matches,
@@ -123,26 +112,16 @@ void matches2points(const Matches& matches,
     LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
 }
 
+// XX (mtourne): Deprec in profit of ImagePair::print_matches()
+// features1.img_gray might not be defined anymore
 void write_matches_image(const ImageFeatures &features1, const ImageFeatures &features2,
                          const Matches &matches,
-                         const string file_tag,
-                         const vector<char> &keypointMask) {
+                         const vector<char> &keypointMask,
+                         const string output) {
     Mat img_matches;
     ostringstream ss;
 
-    Matches good_matches;
-
-    // TODO (mtourne): implement as set_filename() for Features2D class
-    ss << "matches_" << remove_extension(basename(features1.filename)) << "_"
-       << remove_extension(basename(features2.filename)) << "_"
-       << features1.method;
-
-    if (file_tag.size() > 0) {
-        ss << "_" << file_tag;
-    }
-
-    ss << ".jpg";
-
+    ss << "matches_" << features1.method << output << ".jpg";
 
     drawMatches(*features1.img_gray, features1.keypoints,
                 *features2.img_gray, features2.keypoints,

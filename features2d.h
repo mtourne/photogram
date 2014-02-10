@@ -13,10 +13,14 @@ typedef std::vector<DMatch>     Matches;
 typedef std::shared_ptr<Mat>    MatPtr;
 
 typedef struct {
+    // TODO (mtourne):
+    // REMOVE, this has been rolled into
+    // the Image class
     MatPtr              img;
     MatPtr              img_gray;
 
     string              filename;
+    // ENDREMOVE
 
     Keypoints           keypoints;
 
@@ -27,10 +31,10 @@ typedef struct {
     Mat                 descriptors;
     const string        method = "SiftOpenCV";
 #endif
+
 } ImageFeatures;
 
-
-typedef std::shared_ptr<ImageFeatures>                  ImageFeaturesPtr;
+typedef std::shared_ptr<ImageFeatures>  ImageFeaturesPtr;
 
 int get_features(Mat& img_gray, ImageFeatures& features);
 int match_features(ImageFeatures &features1,
@@ -42,7 +46,7 @@ void matches2points(const Matches& matches,
                     vector<Point2f>& pts1, vector<Point2f>& pts2);
 void write_matches_image(const ImageFeatures &features1, const ImageFeatures &features2,
                          const Matches &matches,
-                         const string file_tag = "",
-                         const vector<char> &keypointMask = vector<char>());
+                         const vector<char> &keypointMask = vector<char>(),
+                         const string output = "output");
 
 #endif // !FEATURES2D_H

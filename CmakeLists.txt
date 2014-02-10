@@ -90,10 +90,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -W -Wall")
 add_executable(photogram
 	photogram.cc
 	features2d.cc
+	image.cc
 	image_pairs.cc
 	bundle.cc
 	easyexif/exif.cpp
 	sift_gpu_wrapper.cpp
+	util.cc
 )
 target_link_libraries(photogram ${LINKER_LIBS})
 
@@ -101,6 +103,7 @@ add_executable(homography
 	homography.cc
 	features2d.cc
 	sift_gpu_wrapper.cpp
+	util.cc
 )
 target_link_libraries(homography ${LINKER_LIBS})
 

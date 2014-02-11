@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 project (photogram)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 ### Sets ###
 option(DEBUG "Debug output"	TRUE)
 option(USE_SIFT_GPU "Use SiftGPU to compute image features" TRUE)
@@ -102,6 +104,7 @@ target_link_libraries(photogram ${LINKER_LIBS})
 add_executable(homography
 	homography.cc
 	features2d.cc
+	image.cc
 	sift_gpu_wrapper.cpp
 	util.cc
 )

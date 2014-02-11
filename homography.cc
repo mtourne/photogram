@@ -5,143 +5,126 @@
 _INITIALIZE_EASYLOGGINGPP
 
 #include <opencv2/calib3d/calib3d.hpp>
+
+#include "tclap/CmdLine.h"
+
 #include "features2d.h"
+#include "image.h"
 
 #define VISUAL_DEBUG 0
 
-void help(void) {
-    cout << "Usage: homography img1 img2" << endl
-         << "\tReproject img2 onto img1";
+// TODO (mtourne): add a cli argument to let override the scale
+
+// Try to approximate a good scaling factor from the number of pixels
+// this works assuming the viewport is similar in the two images.
+static double get_scale(Size truth_size, Size img_size) {
+    // most of the time img is going to be bigger than truth
+    unsigned int ratio_w;
+    unsigned int ratio_h;
+    unsigned int ratio_max;
+    double scale;
+
+    if (img_size.width >= truth_size.width) {
+        ratio_w = img_size.width / truth_size.width;
+        ratio_h = img_size.height / truth_size.height;
+    } else {
+        ratio_w = truth_size.width / img_size.width;
+        ratio_h = truth_size.height / img_size.height;
+    }
+
+    ratio_max = max(ratio_w, ratio_h);
+
+    scale = upper_power_of_two(ratio_max);
+
+    if (img_size.width < truth_size.width) {
+        scale = 1 / scale;
+    }
+
+    return scale;
 }
 
 int main(int argc, char** argv) {
 
-    if (argc != 3) {
-        help();
-        return 1;
-    }
+    try {
+        TCLAP::CmdLine cmd("Find a homagraphy between ground truth and random image", ' ', "0.1");
 
-    vector<ImageFeaturesPtr> feature_list;
+        TCLAP::ValueArg<std::string> ground_truth("", "truth", "Ground truth", true, "", "filename");
+        cmd.add(ground_truth);
+        TCLAP::ValueArg<std::string> image("", "image", "Image to map onto ground truth", true, "", "filename");
+        cmd.add(image);
+        TCLAP::ValueArg<std::string> output("", "output", "Prefix for output image", true, "", "name");
+        cmd.add(output);
 
-    for (int i = 1; i < argc; i++) {
-        MatPtr img(new Mat());
-        MatPtr img_gray(new Mat());
+        cmd.parse(argc, argv);
 
-        *img = imread(argv[i]);
-        if (!img) {
-            LOG(FATAL) << "Unable to load image: " << argv[i];
-            return 1;
-        }
+        std::string ground_truth_filename = ground_truth.getValue();
+        std::string img_filename = image.getValue();
+        std::string output_filename = output.getValue() + ".tif";
 
-        cvtColor(*img, *img_gray, COLOR_BGR2GRAY);
+        Image::ptr img(new Image(img_filename));
+        Image::ptr truth(new Image(ground_truth_filename));
 
-        ImageFeaturesPtr features(new ImageFeatures());
-        features->img_gray = img_gray;
-        features->img = img;
-        features->filename = argv[i];
+        ImageFeaturesPtr img_features = img->get_image_features();
+        ImageFeaturesPtr truth_features = truth->get_image_features();
 
-        feature_list.push_back(features);
-     }
+        Matches matches;
+        vector<Point2f> truth_pts, img_pts;
+        Mat H;
 
-#if 0
-    // resize image1 to have the same scale as image2
-    resize(*feature_list[0]->img, *feature_list[0]->img, feature_list[1]->img->size());
-    resize(*feature_list[0]->img_gray, *feature_list[0]->img_gray, feature_list[1]->img->size());
+        // match image descriptors
+        match_features(*img_features, *truth_features, matches);
 
-    imwrite("rescaled_original.jpg", *feature_list[0]->img_gray);
-#endif
+        matches2points(matches, *img_features, *truth_features, img_pts, truth_pts);
 
-    for (size_t i = 0; i < feature_list.size(); i++) {
-        // compute SIFT descriptors
-        get_features(*feature_list[i]->img_gray, *feature_list[i]);
-    }
+        vector<unsigned char> status;
+        H = findHomography(img_pts, truth_pts, CV_RANSAC, 3, status);
 
-
-    ImageFeaturesPtr features1 = feature_list[0];
-    ImageFeaturesPtr features2 = feature_list[1];
-
-    Matches matches;
-    vector<Point2f> pts1, pts2;
-    Mat H;
-
-    // match image descriptors
-    match_features(*features1, *features2, matches);
-
-    matches2points(matches, *features1, *features2, pts1, pts2);
-
-    vector<unsigned char> status;
-    vector<char> keypointMask;
-    H = findHomography(pts1, pts2, CV_RANSAC, 3, status);
-
-    LOG(DEBUG) << "Homography matrix H: " << endl << H;
-
-    // print out RANSAC'ed matched keypoints
-    keypointMask = vector<char> (status.begin(), status.end());
+        LOG(DEBUG) << "Homography matrix H: " << endl << H;
 
 #if VISUAL_DEBUG
-    write_matches_image(*features1, *features2, keypointMask);
+        // print out RANSAC'ed matched keypoints
+        vector<char> keypointMask;
+
+        keypointMask = vector<char> (status.begin(), status.end());
+
+        write_matches_image(img->get_image_gray(), *img_features,
+                            truth->get_image_gray(), *truth_features,
+                            matches,
+                            keypointMask, "matches_RANSAC.jpg");
 #endif
 
-#if 1
-    // scale factor
-    // x is the matrix cols
-    // y is the matrix rows
 
-     double scale_x = (double) features1->img->cols /
-         (double) features2->img->cols;
-     double scale_y = (double) features1->img->rows /
-         (double) features2->img->rows;
+        Size truth_size = truth->get_image_gray()->size();
+        Size img_size = img->get_image_gray()->size();
 
-     double scale = 8;
+        // find closest power of 2 ratio between the two images
+        double scale = get_scale(truth_size, img_size);
 
-    // LOG(DEBUG) << "img1 rows: " << features1->img->rows
-    //            << ", img2 rows: " << features2->img->rows << endl
-    //            << "img1 cols: " << features1->img->cols
-    //            << ", img2 cols: " << features2->img->cols << endl
-    //            << "1 / scale factor x: " << scale_x
-    //            << ", 1 / scale factor y: " << scale_y;
+        LOG(DEBUG) << "Scaling output image by: " << scale;
 
-    Mat Scale = Mat::eye(3, 3, H.type());
-    Scale.at<double>(0,0) = scale;
-    // xx
-    // Scale.at<double>(0,2) = 1 / scale;
-    Scale.at<double>(1,1) = scale;
-    // xx
-    // Scale.at<double>(1,2) = 1 / scale;
+        Mat Scale = Mat::eye(3, 3, H.type());
+        Scale.at<double>(0,0) = scale;
+        Scale.at<double>(1,1) = scale;
 
-    Mat P_up = Mat::eye(3, 3, H.type());
-    P_up.at<double>(0,0) = 2;
-    P_up.at<double>(0,2) = 0.5;
-    P_up.at<double>(1,1) = 2;
-    P_up.at<double>(1,2) = 0.5;
+        LOG(DEBUG) << "Scale matrix: " << endl << Scale;
 
-    LOG(DEBUG) << "Scale matrix : " << endl << Scale;
+        H = Scale * H;
 
-    H = H * Scale;
+        LOG(DEBUG) << "Scaled Homography matrix H: " << endl << H;
 
-    LOG(DEBUG) << "Scaled Homography matrix H: " << endl << H;
+        truth_size.height *= scale;
+        truth_size.width *= scale;
+        LOG(DEBUG) << "Output image size: " << truth_size;
 
-    // LOG(DEBUG) << "Output image size: " << features1->img->size()
-    //            << ", type: " << features1->img->type();
+        Mat warped;
+        warpPerspective(*img->get_image_gray(), warped, H, truth_size);
 
-    // warp image1 to be registered onto image2 (keep aspect ratio)
-    // XX (mtourne): only works with img_gray (opencv bug ?)
-    Mat warped;
-    Size size = features2->img->size();
-    size.height *= scale;
-    size.width *= scale;
-    LOG(DEBUG) << "Output image size: " << size;
+        imwrite(output_filename, warped);
 
-    warpPerspective(*features1->img_gray, warped, H, size);
-    //warpPerspective(*features2->img_gray, warped, P_up, size);
-#else
+        return 0;
 
-    // warp to register image1 onto image2
-    Mat warped;
-    warpPerspective(*features1->img_gray, warped, H, features2->img->size());
-#endif
-
-    imwrite("img1_img2_warped.tif", warped);
-
-    return 0;
+    } catch (TCLAP::ArgException &e)  {
+        std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+        return 1;
+    }
 }

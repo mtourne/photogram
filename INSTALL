@@ -1,0 +1,14 @@
+Prerequisites
+-------------
+
+OpenCV
+OpenGL / Glew / Glut for SiftGPU
+
+
+Install
+-------
+
+    mkdir build
+    cd build
+    cmake ..
+    make

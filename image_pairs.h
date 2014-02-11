@@ -35,6 +35,7 @@ class ImagePair {
 
     Matches             matches;
 
+    // Fundamental Matrix between 2 images
     Mat                 F;
 
     // vector of inliers associated to matches

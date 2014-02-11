@@ -13,15 +13,6 @@ typedef std::vector<DMatch>     Matches;
 typedef std::shared_ptr<Mat>    MatPtr;
 
 typedef struct {
-    // TODO (mtourne):
-    // REMOVE, this has been rolled into
-    // the Image class
-    MatPtr              img;
-    MatPtr              img_gray;
-
-    string              filename;
-    // ENDREMOVE
-
     Keypoints           keypoints;
 
 #ifdef USE_SIFT_GPU
@@ -44,9 +35,10 @@ int get_F_matrix(ImageFeatures &features1, ImageFeatures &features2,
 void matches2points(const Matches& matches,
                     ImageFeatures& features1, ImageFeatures& features2,
                     vector<Point2f>& pts1, vector<Point2f>& pts2);
-void write_matches_image(const ImageFeatures &features1, const ImageFeatures &features2,
+void write_matches_image(const MatPtr img1, const ImageFeatures &features1,
+                         const MatPtr img2, const ImageFeatures &features2,
                          const Matches &matches,
                          const vector<char> &keypointMask = vector<char>(),
-                         const string output = "output");
+                         const string output = "matches.jpg");
 
 #endif // !FEATURES2D_H

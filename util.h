@@ -5,7 +5,8 @@
 
 #include "photogram.h"
 
-std::string basename(const std::string& pathname);
-std::string remove_extension(const std::string& pathname);
+string basename(const std::string& pathname);
+string remove_extension(const std::string& pathname);
+unsigned long upper_power_of_two(unsigned long v);
 
-#endif
+#endif // !UTIL_H

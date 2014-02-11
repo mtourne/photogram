@@ -112,23 +112,17 @@ void matches2points(const Matches& matches,
     LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
 }
 
-// XX (mtourne): Deprec in profit of ImagePair::print_matches()
-// features1.img_gray might not be defined anymore
-void write_matches_image(const ImageFeatures &features1, const ImageFeatures &features2,
+void write_matches_image(const MatPtr img1, const ImageFeatures &features1,
+                         const MatPtr img2, const ImageFeatures &features2,
                          const Matches &matches,
                          const vector<char> &keypointMask,
                          const string output) {
     Mat img_matches;
-    ostringstream ss;
-
-    ss << "matches_" << features1.method << output << ".jpg";
-
-    drawMatches(*features1.img_gray, features1.keypoints,
-                *features2.img_gray, features2.keypoints,
+    drawMatches(*img1, features1.keypoints,
+                *img2, features2.keypoints,
                 matches, img_matches, Scalar::all(-1), Scalar::all(-1),
                 keypointMask, DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 
-    LOG(DEBUG) << "Writing image: " << ss.str();
-
-    imwrite(ss.str().c_str(), img_matches);
+    LOG(DEBUG) << "Writing image: " << output;
+    imwrite(output.c_str(), img_matches);
 }

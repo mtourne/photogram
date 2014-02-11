@@ -1,8 +1,5 @@
 /* Copyright 2014 Matthieu Tourne */
 
-#include <iostream>
-#include <stdio.h>
-
 #include "photogram.h"
 
 _INITIALIZE_EASYLOGGINGPP
@@ -140,10 +137,8 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         Image::ptr img_ptr(new Image(argv[i]));
+        MatPtr img_gray = img_ptr->get_image_gray();;
 
-        MatPtr img_gray;
-
-        img_gray = img_ptr->get_image_gray();
         if (!img_gray) {
             LOG(ERROR) << "Unable to load image: " << argv[i] << ". Skipping.";
             continue;

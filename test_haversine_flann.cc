@@ -77,7 +77,7 @@ int main() {
 
 
     LOG(DEBUG)
-        << "HARVESTINE Distances: " << endl
+        << "HAVERSINE Distances: " << endl
         << "Neighbors indices: " << endl << neighbors_indices << endl
         << "Neighbors distances (in kilo meters): " << endl << neighbors_distances;
 

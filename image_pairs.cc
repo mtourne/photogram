@@ -121,13 +121,7 @@ void ImagePair::print_matches() const {
     }
     ss << ".jpg";
 
-    Mat img_matches;
-    drawMatches(*img_gray1, features1->keypoints,
-                *img_gray2, features2->keypoints,
-                matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-                keypointsInliers, DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-
-    LOG(DEBUG) << "Writing image: " << ss.str();
-
-    imwrite(ss.str().c_str(), img_matches);
+    write_matches_image(img_gray1, *features1,
+                        img_gray2, *features2,
+                        matches, keypointsInliers, ss.str());
 }

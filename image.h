@@ -7,8 +7,6 @@
 #include "features2d.h"
 #include "util.h"
 
-typedef std::shared_ptr<Mat>    MatPtr;
-
 class Image {
 public:
     typedef std::shared_ptr<Image>  ptr;
@@ -46,8 +44,8 @@ public:
         return K;
     }
 
-    MatPtr get_image();
-    MatPtr get_image_gray();
+    Mat get_image();
+    Mat get_image_gray();
 
     // TODO (mtourne) : implement
     bool parse_exif_data();
@@ -55,8 +53,8 @@ public:
     ImageFeaturesPtr get_image_features();
 
 protected:
-    MatPtr img;
-    MatPtr img_gray;
+    Mat img;
+    Mat img_gray;
 
     // file name
     string filename;
@@ -74,5 +72,7 @@ protected:
     // used to create a pairlist
     Mat coords;
 };
+
+Mat dewarp_channels(const Mat input, const Mat Homography, Size output_size);
 
 #endif

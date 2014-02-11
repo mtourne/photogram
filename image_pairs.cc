@@ -101,8 +101,8 @@ int ImagePair::compute_camera_mat() {
 }
 
 void ImagePair::print_matches() const {
-    MatPtr img_gray1 = image1->get_image_gray();
-    MatPtr img_gray2 = image2->get_image_gray();
+    Mat img_gray1 = image1->get_image_gray();
+    Mat img_gray2 = image2->get_image_gray();
     ImageFeaturesPtr features1 = image1->get_image_features();
     ImageFeaturesPtr features2 = image2->get_image_features();
 

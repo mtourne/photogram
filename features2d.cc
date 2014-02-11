@@ -26,7 +26,7 @@ FlannBasedMatcher flann_matcher;
 // SurfFeatureDetector opencv_surf_detector;
 // SurfDescriptorExtractor opencv_surf_extractor;
 
-int get_features(Mat& img_gray, ImageFeatures &features) {
+int get_features(Mat img_gray, ImageFeatures &features) {
 
 #ifdef USE_SIFT_GPU
     LOG(DEBUG) << "using SIFT gpu";
@@ -112,14 +112,14 @@ void matches2points(const Matches& matches,
     LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
 }
 
-void write_matches_image(const MatPtr img1, const ImageFeatures &features1,
-                         const MatPtr img2, const ImageFeatures &features2,
+void write_matches_image(const Mat img1, const ImageFeatures &features1,
+                         const Mat img2, const ImageFeatures &features2,
                          const Matches &matches,
                          const vector<char> &keypointMask,
                          const string output) {
     Mat img_matches;
-    drawMatches(*img1, features1.keypoints,
-                *img2, features2.keypoints,
+    drawMatches(img1, features1.keypoints,
+                img2, features2.keypoints,
                 matches, img_matches, Scalar::all(-1), Scalar::all(-1),
                 keypointMask, DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 

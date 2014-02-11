@@ -137,17 +137,14 @@ int main(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         Image::ptr img_ptr(new Image(argv[i]));
-        MatPtr img_gray = img_ptr->get_image_gray();;
 
-        if (!img_gray) {
-            LOG(ERROR) << "Unable to load image: " << argv[i] << ". Skipping.";
-            continue;
-        }
+        // TODO (mtourne): catch exception
+        Mat img_gray = img_ptr->get_image_gray();
 
         // TODO (mtourne): replace with parse_exif_data
         // inside Image obj.
         // get instrinsic camera matrix K
-        get_k_matrix_from_exif(argv[i], *img_gray, K);
+        get_k_matrix_from_exif(argv[i], img_gray, K);
         img_ptr->set_camera_matrix(K);
 
         image_bundle.add_image(img_ptr);

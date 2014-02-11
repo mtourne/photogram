@@ -1,42 +1,39 @@
 #include "image.h"
 
-MatPtr Image::get_image() {
-    if (img) {
+Mat Image::get_image() {
+    if (img.data) {
         // image already loaded
         return img;
     }
 
     // load on the fly image from file
-    img.reset(new Mat());
-
     LOG(DEBUG) << "Loading image from file: " << filename;
-    *img = imread(filename);
-    if (img == 0) {
-        LOG(ERROR) << "Unable to load image file: " << filename;
-        img.reset();
-        return MatPtr();
+    img = imread(filename, CV_LOAD_IMAGE_UNCHANGED);
+    if (!img.data) {
+        throw std::runtime_error("Could not open file.");
     }
+
+    LOG(DEBUG) << "Loaded image size: " << img.size()
+               << ", channels: " << img.channels();
 
     return img;
 }
 
-MatPtr Image::get_image_gray() {
-    if (img_gray) {
+Mat Image::get_image_gray() {
+    if (img_gray.data) {
         // gray image already loaded
         return img_gray;
     }
 
     // convert on the fly image gray from image
-    MatPtr img;
+    Mat img_color;
 
-    img = get_image();
-    if (!img) {
-        return MatPtr();
-    }
-
-    img_gray.reset(new Mat());
+    img_color = get_image();
     LOG(DEBUG) << "Converting color to gray image";
-    cvtColor(*img, *img_gray, COLOR_BGR2GRAY);
+    cvtColor(img, img_gray, COLOR_BGR2GRAY);
+    if (!img_gray.data) {
+        throw std::runtime_error("Could not get gray image");
+    }
 
     return img_gray;
 }
@@ -46,19 +43,14 @@ ImageFeaturesPtr Image::get_image_features() {
         return features;
     }
 
-    MatPtr image_gray = get_image_gray();
-
-    if (!image_gray) {
-        LOG(ERROR) << "Unable to retrieve gray image";
-        return ImageFeaturesPtr();
-    }
+    Mat image_gray = get_image_gray();
 
     features.reset(new ImageFeatures);
 
     // get SIFT like features
     int rc;
     LOG(DEBUG) << "Getting SIFT-like features";
-    rc = get_features(*img_gray, *features);
+    rc = get_features(image_gray, *features);
     if (rc != 0) {
         LOG(ERROR) << "Unable to compute image features";
         features.reset();
@@ -66,4 +58,20 @@ ImageFeaturesPtr Image::get_image_features() {
     }
 
     return features;
+}
+
+Mat dewarp_channels(const Mat input, const Mat H, Size output_size) {
+    int channels = input.channels();
+    vector<Mat> input_channels(channels);
+    vector<Mat> output_channels(channels);
+
+    split(input, input_channels);
+
+    for (int i = 0; i < channels; i++) {
+        warpPerspective(input_channels[i], output_channels[i], H, output_size);
+    }
+
+    Mat output;
+    merge(output_channels, output);
+    return output;
 }

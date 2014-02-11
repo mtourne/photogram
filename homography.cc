@@ -61,11 +61,11 @@ int main(int argc, char** argv) {
         std::string img_filename = image.getValue();
         std::string output_filename = output.getValue() + ".tif";
 
-        Image::ptr img(new Image(img_filename));
-        Image::ptr truth(new Image(ground_truth_filename));
+        Image img(img_filename);
+        Image truth(ground_truth_filename);
 
-        ImageFeaturesPtr img_features = img->get_image_features();
-        ImageFeaturesPtr truth_features = truth->get_image_features();
+        ImageFeaturesPtr img_features = img.get_image_features();
+        ImageFeaturesPtr truth_features = truth.get_image_features();
 
         Matches matches;
         vector<Point2f> truth_pts, img_pts;
@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
 #endif
 
 
-        Size truth_size = truth->get_image_gray()->size();
-        Size img_size = img->get_image_gray()->size();
+        Size truth_size = truth.get_image_gray().size();
+        Size img_size = img.get_image_gray().size();
 
         // find closest power of 2 ratio between the two images
         double scale = get_scale(truth_size, img_size);
@@ -116,10 +116,9 @@ int main(int argc, char** argv) {
         truth_size.width *= scale;
         LOG(DEBUG) << "Output image size: " << truth_size;
 
-        Mat warped;
-        warpPerspective(*img->get_image_gray(), warped, H, truth_size);
-
-        imwrite(output_filename, warped);
+        // warp each channel individually
+        Mat dewarped = dewarp_channels(img.get_image(), H, truth_size);
+        imwrite(output_filename, dewarped);
 
         return 0;
 

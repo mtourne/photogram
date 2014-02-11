@@ -45,6 +45,8 @@ public:
     }
 
     Mat get_image();
+    void add_transparency_layer(string filename);
+
     Mat get_image_gray();
 
     // TODO (mtourne) : implement

@@ -19,6 +19,24 @@ Mat Image::get_image() {
     return img;
 }
 
+void Image::add_transparency_layer(string filename) {
+    Mat image = get_image();
+
+    LOG(DEBUG) << "Loading alpha channel from file: " << filename;
+    Mat mask = imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
+    if (!mask.data) {
+        throw std::runtime_error("Could not open file.");
+    }
+
+    vector<Mat> input(2);
+    input[0] = image;
+    input[1] = mask;
+    merge(input, img);
+
+    LOG(DEBUG) << "Image size: " << img.size()
+               << ", channels: " << img.channels();
+}
+
 Mat Image::get_image_gray() {
     if (img_gray.data) {
         // gray image already loaded

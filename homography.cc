@@ -54,14 +54,21 @@ int main(int argc, char** argv) {
         cmd.add(image);
         TCLAP::ValueArg<std::string> output("", "output", "Prefix for output image", true, "", "name");
         cmd.add(output);
+        TCLAP::ValueArg<std::string> alpha("", "alpha_chan", "Transparency layer", false, "", "filename");
+        cmd.add(alpha);
 
         cmd.parse(argc, argv);
 
         std::string ground_truth_filename = ground_truth.getValue();
         std::string img_filename = image.getValue();
         std::string output_filename = output.getValue() + ".tif";
+        std::string alpha_filename = alpha.getValue();
 
         Image img(img_filename);
+        if (alpha_filename.size() > 0) {
+            img.add_transparency_layer(alpha_filename);
+        }
+
         Image truth(ground_truth_filename);
 
         ImageFeaturesPtr img_features = img.get_image_features();

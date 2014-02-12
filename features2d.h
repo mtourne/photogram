@@ -3,6 +3,7 @@
 #ifndef FEATURES2D_H
 #define FEATURES2D_H
 
+#include <memory>
 #include <vector>
 #include <opencv2/features2d/features2d.hpp>
 
@@ -16,10 +17,8 @@ typedef struct {
 
 #ifdef USE_SIFT_GPU
     std::vector<float>  descriptors;
-    const string        method = "SiftGPU";
 #else
     Mat                 descriptors;
-    const string        method = "SiftOpenCV";
 #endif
 
 } ImageFeatures;

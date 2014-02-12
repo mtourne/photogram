@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "image.h"
 
 Mat Image::get_image() {

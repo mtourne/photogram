@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project (photogram)
+project (photogram CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -67,8 +67,8 @@ endif (USE_SIFT_GPU)
 #############
 ### Eigen ###
 #############
-find_package(Eigen REQUIRED)
-include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+#find_package(Eigen REQUIRED)
+#include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 
 #############
 ### Boost ###
@@ -86,7 +86,9 @@ include_directories(rapidjson/include)
 ###############
 ### Targets ###
 ###############
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -W -Wall")
+# CXX Flags
+add_definitions(-std=c++11)
+add_definitions(-W -Wall)
 
 ### sources ###
 add_executable(photogram

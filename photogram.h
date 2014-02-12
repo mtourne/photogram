@@ -10,7 +10,13 @@
 
 #include <math.h>
 
+// TODO (mtourne): eventually replace
+// with log4cxx (compiled library)
+#if defined(__clang__) || defined(GCC47)
 #include "logging.hpp"
+#else
+#include "logging_dummy.hpp"
+#endif
 
 using namespace std;
 using namespace cv;

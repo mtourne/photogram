@@ -54,6 +54,13 @@ public:
 
     ImageFeaturesPtr get_image_features();
 
+    // serialization
+    void write(FileStorage& fs) const;
+
+    // deserialization
+    void read(const FileNode& node);
+
+
 protected:
     Mat img;
     Mat img_gray;
@@ -74,6 +81,20 @@ protected:
     // used to create a pairlist
     Mat coords;
 };
+
+// serialization
+inline void write(FileStorage& fs, const std::string&, const Image& x) {
+    x.write(fs);
+}
+
+// deserialization
+inline void read(const FileNode& node, Image& x,
+                 const Image& default_value = Image()){
+    if (node.empty())
+        x = default_value;
+    else
+        x.read(node);
+}
 
 Mat dewarp_channels(const Mat input, const Mat Homography, Size output_size);
 

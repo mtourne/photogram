@@ -11,9 +11,10 @@
 // Image pair is a pair of images from the same camera at different point in the space
 class ImagePair {
  public:
+    ImagePair() {};
     ImagePair(Image::ptr image1, Image::ptr image2)
-        : image1(image1), image2(image2), error("")
-    {};
+        : image1(image1), image2(image2) {};
+
     ~ImagePair() {};
 
     bool compute_matches();
@@ -27,6 +28,12 @@ class ImagePair {
     void print_matches() const;
 
     // TODO (mtourne): save / load of imagepair
+
+    // serialization
+    void write(FileStorage& fs) const;
+
+    // deserialization
+    void read(const FileNode& node);
 
  private:
 
@@ -45,5 +52,19 @@ class ImagePair {
 
     string error;
 };
+
+// serialization
+inline void write(FileStorage& fs, const std::string&, const ImagePair& x) {
+    x.write(fs);
+}
+
+// deserialization
+inline void read(const FileNode& node, ImagePair& x,
+                 const ImagePair& default_value = ImagePair()){
+    if (node.empty())
+        x = default_value;
+    else
+        x.read(node);
+}
 
 #endif // !IMAGE

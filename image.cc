@@ -79,6 +79,29 @@ ImageFeaturesPtr Image::get_image_features() {
     return features;
 }
 
+void Image::write(FileStorage& fs) const{
+    fs << "{"
+       << "name" << name
+       << "filename" << filename
+       << "camera_mat" << K
+       << "coords" << coords
+       << "features" << *features
+       << "}";
+}
+
+void Image::read(const FileNode& node) {
+    LOG(DEBUG) << "De-serializing Image";
+
+    features.reset(new ImageFeatures());
+
+    node["name"] >> name;
+    node["filename"] >> filename;
+    node["camera_mat"] >> K;
+    node["coords"] >> coords;
+    node["features"] >> *features;;
+}
+
+
 Mat dewarp_channels(const Mat input, const Mat H, Size output_size) {
     int channels = input.channels();
     vector<Mat> input_channels(channels);

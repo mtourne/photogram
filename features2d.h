@@ -21,9 +21,30 @@ typedef struct {
     Mat                 descriptors;
 #endif
 
+    // serialization
+    void write(FileStorage &fs) const;
+
+    // deserialization
+    void read(const FileNode &node);
+
 } ImageFeatures;
 
 typedef std::shared_ptr<ImageFeatures>  ImageFeaturesPtr;
+
+// serialization
+inline void write(FileStorage& fs, const std::string&,
+                         const ImageFeatures& x) {
+    x.write(fs);
+}
+
+// deserialization
+inline void read(const FileNode& node, ImageFeatures& x,
+                 const ImageFeatures& default_value = ImageFeatures()){
+    if (node.empty())
+        x = default_value;
+    else
+        x.read(node);
+}
 
 int get_features(const Mat img_gray, ImageFeatures& features);
 int match_features(ImageFeatures &features1,

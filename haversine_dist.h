@@ -46,7 +46,7 @@ struct HaversineDist {
     typedef True is_vector_space_distance;
 
     typedef T ElementType;
-    typedef typename Accumulator<T>::Type ResultType;
+    typedef typename cvflann::Accumulator<T>::Type ResultType;
 
     /**
      *  Compute the Haversine distance between two vectors.

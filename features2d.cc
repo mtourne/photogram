@@ -16,6 +16,26 @@
 #include "sift_gpu_wrapper.h"
 #endif
 
+void ImageFeatures::write(FileStorage &fs) const {
+    fs << "{"
+       << "keypoints" << keypoints
+       << "descriptors" << descriptors
+       << "}";
+}
+
+void ImageFeatures::read(const FileNode &node) {
+    LOG(DEBUG) << "De-serializing ImageFeatures";
+
+    cv::read(node["keypoints"], keypoints);
+#ifdef USE_SIFT_GPU
+    node["descriptors"] >> descriptors;
+#else
+    // descriptor is a Mat
+    node["descriptors"] >> descriptors;
+#endif
+}
+
+
 SiftFeatureDetector opencv_sift_detector;
 SiftDescriptorExtractor opencv_sift_extractor;
 FlannBasedMatcher flann_matcher;

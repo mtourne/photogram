@@ -1,9 +1,70 @@
-#include <sstream>
-#include <string>
+#include "image_pairs.h"
+#include "image.h"
+
 #include <opencv2/calib3d/calib3d.hpp>
 
-#include "photogram.h"
-#include "image_pairs.h"
+// inspired from persitence.cpp:write( .., vector<Keypoint>& keypoints)
+static void write_matches(FileStorage& fs, const std::string& name, const Matches& matches) {
+    WriteStructContext ws(fs, name, CV_NODE_SEQ + CV_NODE_FLOW);
+
+    for (DMatch match : matches) {
+        write(fs, match.queryIdx);
+        write(fs, match.trainIdx);
+        write(fs, match.imgIdx);
+        write(fs, match.distance);
+    }
+}
+
+// inspired from persitence.cpp:read( .., vector<Keypoint>& keypoints)
+static void read_matches(const FileNode& node, Matches& matches) {
+    matches.resize(0);
+
+    FileNodeIterator it = node.begin(), it_end = node.end();
+    for( ; it != it_end; ) {
+        DMatch match;
+
+        it >> match.queryIdx >> match.trainIdx >> match.imgIdx >> match.distance;
+        matches.push_back(match);
+    }
+}
+
+void ImagePair::write(FileStorage& fs) const {
+    LOG(DEBUG) << "Serializing Image Pair";
+
+    fs << "{"
+       << "F" << F;
+
+    write_matches(fs, "matches", matches);
+
+    fs << "inliers_count" << (int) inliers_count
+       << "inliers" << keypointsInliers
+       << "image1" << *image1
+       << "image2" << *image2
+       << "error" << error
+       << "}";
+}
+
+void ImagePair::read(const FileNode& node) {
+    int count;
+
+    image1.reset(new Image());
+    image2.reset(new Image());
+
+    LOG(DEBUG) << "De-serializing Image Pair";
+
+    node["F"] >> F;
+
+    read_matches(node["matches"], matches);
+
+    node["inliers_count"] >> count;
+    inliers_count = count;
+
+    node["inliers"] >> keypointsInliers;
+    node["image1"] >> *image1;
+    node["image2"] >> *image2;
+    node["error"] >> error;
+}
+
 
 bool ImagePair::compute_matches() {
     ImageFeaturesPtr features1 = image1->get_image_features();

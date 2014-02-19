@@ -11,7 +11,10 @@ class Image {
 public:
     typedef std::shared_ptr<Image>  ptr;
 
-    Image() {};
+    Image()
+        : filename("NA"), name("NA")
+    {};
+
     Image(const string filename) {
         set_filename(filename);
     }
@@ -21,6 +24,10 @@ public:
     inline void set_filename(const string file) {
         filename = file;
         name = remove_extension(basename(file));
+    }
+
+    inline void set_name(const string new_name) {
+        name = new_name;
     }
 
     inline string get_name() const {

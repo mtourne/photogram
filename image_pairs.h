@@ -23,9 +23,6 @@ class ImagePair {
     // compute fundamental matrix
     bool compute_F_mat();
 
-    // filter putative matches from a model (F matrix, homography ..)
-    bool filterPutativeMatches();
-
     // compute camera matrix P
     int compute_camera_mat();
 
@@ -48,9 +45,15 @@ class ImagePair {
         return image2;
     }
 
+    // filter putative matches from a model (F matrix, homography ..)
+    bool filterPutativeMatches();
+
     inline Matches get_matches() const {
-        // TODO (mtourne): return putative matches
         return matches;
+    }
+
+    inline void set_matches(Matches new_matches) {
+        matches = new_matches;
     }
 
  private:

@@ -146,3 +146,14 @@ add_executable(test_io
 	util.cc
 )
 target_link_libraries(test_io ${LINKER_LIBS})
+
+add_executable(test_tracks
+	test_tracks.cc
+	features2d.cc
+	image.cc
+	image_pairs.cc
+	features2d.cc
+	sift_gpu_wrapper.cpp
+	util.cc
+)
+target_link_libraries(test_tracks ${LINKER_LIBS})

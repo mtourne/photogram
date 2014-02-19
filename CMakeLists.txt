@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project (photogram CXX)
+project (photogram C CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -21,6 +21,17 @@ else(DEBUG)
 	message(STATUS "Debug off")
 	add_definitions(-DNDEBUG=1)
 endif(DEBUG)
+
+####################
+### Include dirs ###
+####################
+#ADD_SUBDIRECTORY(third_party)
+
+INCLUDE_DIRECTORIES(
+#	./third_party
+	./third_party/lemon
+	${PROJECT_BINARY_DIR}/third_party/lemon
+)
 
 ##############
 ### OpenCV ###
@@ -82,10 +93,9 @@ set(LINKER_LIBS ${LINKER_LIBS} ${Boost_SYSTEM_LIBRARY})
 # include rapidjson lib
 include_directories(rapidjson/include)
 
-
-###############
-### Targets ###
-###############
+#############
+### Flags ###
+#############
 # CXX Flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall")
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -96,7 +106,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
 endif()
 
+################
 ### sources ###
+###############
 add_executable(photogram
 	photogram.cc
 	features2d.cc
@@ -118,7 +130,19 @@ add_executable(homography
 )
 target_link_libraries(homography ${LINKER_LIBS})
 
+# TODO (mtourne): special target for tests
 add_executable(test_haversine_flann
 	test_haversine_flann.cc
 )
 target_link_libraries(test_haversine_flann ${LINKER_LIBS})
+
+add_executable(test_io
+	test_io.cc
+	features2d.cc
+	image.cc
+	image_pairs.cc
+	features2d.cc
+	sift_gpu_wrapper.cpp
+	util.cc
+)
+target_link_libraries(test_io ${LINKER_LIBS})

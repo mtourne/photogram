@@ -4,6 +4,7 @@
 #include "photogram.h"
 #include "features2d.h"
 #include "image.h"
+#include "indexed_matches.h"
 
 #define MIN_FEATURE_MATCHES 50
 #define MIN_INLIERS 50
@@ -22,18 +23,35 @@ class ImagePair {
     // compute fundamental matrix
     bool compute_F_mat();
 
+    // filter putative matches from a model (F matrix, homography ..)
+    bool filterPutativeMatches();
+
     // compute camera matrix P
     int compute_camera_mat();
 
     void print_matches() const;
 
-    // TODO (mtourne): save / load of imagepair
+    bool get_indexed_matches(vector<IndexedMatch> &indMatches) const;
 
     // serialization
     void write(FileStorage& fs) const;
 
     // deserialization
     void read(const FileNode& node);
+
+    // TODO (mtourne): std::pair<Image::ptr, Image::ptr> might make sense
+    inline Image::ptr first() const {
+        return image1;
+    }
+
+    inline Image::ptr second() const {
+        return image2;
+    }
+
+    inline Matches get_matches() const {
+        // TODO (mtourne): return putative matches
+        return matches;
+    }
 
  private:
 
@@ -67,4 +85,4 @@ inline void read(const FileNode& node, ImagePair& x,
         x.read(node);
 }
 
-#endif // !IMAGE
+#endif // !IMAGE_PAIRS_H

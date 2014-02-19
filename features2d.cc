@@ -132,6 +132,28 @@ void matches2points(const Matches& matches,
     LOG(DEBUG) << "points1: " << pts1.size() << ", points2: " << pts2.size();
 }
 
+// clean up the original matches, only keep the ones that satisfy the model
+bool get_putative_matches(const Matches &matches, const vector<char> &keypointsInliers,
+                          Matches &output) {
+    if (matches.size() != keypointsInliers.size()) {
+        LOG(ERROR) << "matches and inliers size differ";
+        return false;
+    }
+
+    for (size_t i = 0; i < matches.size(); i++) {
+        const DMatch& match = matches[i];
+
+        if (keypointsInliers[i]) {
+            output.push_back(match);
+        }
+    }
+
+    LOG(DEBUG) << "Input size: " << matches.size()
+               << ", Output size: " << output.size();
+
+    return true;
+}
+
 void write_matches_image(const Mat img1, const ImageFeatures &features1,
                          const Mat img2, const ImageFeatures &features2,
                          const Matches &matches,

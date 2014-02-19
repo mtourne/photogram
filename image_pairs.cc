@@ -77,6 +77,7 @@ bool ImagePair::compute_matches() {
 
     match_features(*features1, *features2, matches);
 
+    // XX (mtourne): probably dependent on algo
     if (matches.size() < MIN_FEATURE_MATCHES) {
         LOG(DEBUG) << "Not enough matches: " << matches.size()
                    << ", at least " << MIN_FEATURE_MATCHES << "needed.";
@@ -118,6 +119,26 @@ bool ImagePair::compute_F_mat() {
                    << ", at least " << MIN_INLIERS << "needed.";
         return false;
     }
+
+    return true;
+}
+
+bool ImagePair::filterPutativeMatches() {
+    if (keypointsInliers.size() <= 0) {
+        LOG(ERROR) << "No keypoint inliers defined";
+        return false;
+    }
+
+    Matches new_matches;
+
+    if (!get_putative_matches(matches, keypointsInliers, new_matches)) {
+        return false;
+    }
+
+    matches = new_matches;
+
+    // remove former keypoints inliers, this is a one time operation
+    keypointsInliers.clear();
 
     return true;
 }

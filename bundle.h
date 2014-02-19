@@ -27,7 +27,15 @@ class Bundle : boost::noncopyable {
         return image_pairs.size();
     }
 
+    inline vector<ImagePair> get_image_pairs() const {
+        return image_pairs;
+    }
+
     void add_image(Image::ptr image);
+
+    inline Image::ptr get_image(const int i) const {
+        return images[i];
+    }
 
     inline vector<Image::ptr> get_images() const {
         return images;

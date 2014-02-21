@@ -31,10 +31,10 @@ class ImagePair {
     bool get_indexed_matches(vector<IndexedMatch> &indMatches) const;
 
     // serialization
-    void write(FileStorage& fs) const;
+    void write(FileStorage& fs, bool save_image=true) const;
 
     // deserialization
-    void read(const FileNode& node);
+    void read(const FileNode& node, bool load_image=true);
 
     // TODO (mtourne): std::pair<Image::ptr, Image::ptr> might make sense
     inline Image::ptr first() const {

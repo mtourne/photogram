@@ -15,6 +15,7 @@ include(ExternalProject)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/" ${CMAKE_MODULE_PATH})
 
 ## Debug ##
+## XX (mtourne): this seems to be automatic with cmake -DCMAKE_BUILD_TYPE=Debug
 if(DEBUG)
 	message(STATUS "Debug on")
 else(DEBUG)
@@ -28,7 +29,7 @@ endif(DEBUG)
 #ADD_SUBDIRECTORY(third_party)
 
 INCLUDE_DIRECTORIES(
-#	./third_party
+	./third_party
 	./third_party/lemon
 	${PROJECT_BINARY_DIR}/third_party/lemon
 )
@@ -142,6 +143,7 @@ add_executable(test_io
 	image.cc
 	image_pairs.cc
 	features2d.cc
+    bundle.cc
 	sift_gpu_wrapper.cpp
 	util.cc
 )

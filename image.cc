@@ -80,6 +80,8 @@ ImageFeaturesPtr Image::get_image_features() {
 }
 
 void Image::write(FileStorage& fs) const{
+    LOG(DEBUG) << "Serializing Image";
+
     fs << "{"
        << "name" << name
        << "filename" << filename

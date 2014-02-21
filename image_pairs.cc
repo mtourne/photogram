@@ -28,7 +28,7 @@ static void read_matches(const FileNode& node, Matches& matches) {
     }
 }
 
-void ImagePair::write(FileStorage& fs) const {
+void ImagePair::write(FileStorage& fs, bool save_image) const {
     LOG(DEBUG) << "Serializing Image Pair";
 
     fs << "{"
@@ -37,18 +37,19 @@ void ImagePair::write(FileStorage& fs) const {
     write_matches(fs, "matches", matches);
 
     fs << "inliers_count" << (int) inliers_count
-       << "inliers" << keypointsInliers
-       << "image1" << *image1
-       << "image2" << *image2
-       << "error" << error
+       << "inliers" << keypointsInliers;
+
+    if (save_image) {
+        fs << "image1" << *image1
+           << "image2" << *image2;
+    }
+
+    fs << "error" << error
        << "}";
 }
 
-void ImagePair::read(const FileNode& node) {
+void ImagePair::read(const FileNode& node, bool load_image) {
     int count;
-
-    image1.reset(new Image());
-    image2.reset(new Image());
 
     LOG(DEBUG) << "De-serializing Image Pair";
 
@@ -60,8 +61,14 @@ void ImagePair::read(const FileNode& node) {
     inliers_count = count;
 
     node["inliers"] >> keypointsInliers;
-    node["image1"] >> *image1;
-    node["image2"] >> *image2;
+
+    if (load_image) {
+        image1.reset(new Image());
+        image2.reset(new Image());
+
+        node["image1"] >> *image1;
+        node["image2"] >> *image2;
+    }
     node["error"] >> error;
 }
 

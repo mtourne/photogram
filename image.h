@@ -67,6 +67,10 @@ public:
     // deserialization
     void read(const FileNode& node);
 
+    // keep all known images here, useful for serialization.
+    static std::map<size_t, Image::ptr> all_images;
+    static std::map<Image::ptr, size_t> all_images_index;
+    static size_t image_count;
 
 protected:
     Mat img;

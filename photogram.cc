@@ -1,6 +1,7 @@
 /* Copyright 2014 Matthieu Tourne */
 
 #include "photogram.h"
+#include "tracks.hpp"
 
 _INITIALIZE_EASYLOGGINGPP
 
@@ -8,6 +9,7 @@ _INITIALIZE_EASYLOGGINGPP
 #include "features2d.h"
 #include "image_pairs.h"
 #include "bundle.h"
+
 
 #define VISUAL_DEBUG 1
 
@@ -188,6 +190,21 @@ int main(int argc, char **argv) {
     }
 
     LOG(INFO) << "Kept " << image_bundle.pair_count() << " image pairs.";
+
+    LOG(INFO) << "Serializing to disk";
+
+
+    FileStorage fsb("bundle.txt", FileStorage::WRITE);
+
+    fsb << "bundle" << image_bundle;
+    fsb.release();
+
+    LOG(INFO) << "De serializing bundle";
+    Bundle new_bundle;
+
+    fsb.open("bundle.txt", FileStorage::READ);
+    fsb["bundle"] >> new_bundle;
+    fsb.release();
 
     return 0;
 }
